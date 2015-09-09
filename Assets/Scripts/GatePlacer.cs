@@ -17,7 +17,11 @@ public class GatePlacer : MonoBehaviour
     {
         if (placingMode)
         {
-          //  GetComponent<Linker>().enabled = false;
+
+           
+           float rot = Input.GetAxis("Mouse ScrollWheel");
+           rotation *= Quaternion.Euler(0, 0, rot * 50f);
+            
             RaycastHit hit;
 			Ray ray = GetComponent<Camera> ().ScreenPointToRay (Input.mousePosition);
             if (Physics.Raycast(ray, out hit, 40f))
@@ -33,6 +37,7 @@ public class GatePlacer : MonoBehaviour
                         gate.GetComponent<Collider>().enabled = true;
                         gate = null;
                         placingMode = false;
+                        rotation = Quaternion.identity;
                         GetComponent<Linker>().enabled = true;
                     }
                 }

@@ -14,6 +14,8 @@ public class Linker : MonoBehaviour
     Gate selectedGate;
 
     public GameObject window;
+    public Text windowHeader;
+
     public GameObject IOLabelFab;
 
     List<GameObject> inputs = new List<GameObject>();
@@ -92,7 +94,7 @@ public class Linker : MonoBehaviour
                         connectOutput = false;
                         showInputs = true;
                         currentWire.GetComponent<LineRenderer>().SetVertexCount(pointNum + 1);
-                        lastClickPos.y += 0.015f;
+                      //  lastClickPos.y += 0.015f;
                         currentWire.GetComponent<LineRenderer>().SetPosition(pointNum, lastClickPos);
                         LinkInput();
                         pointNum = 0;
@@ -130,13 +132,13 @@ public class Linker : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(0))
         {
             Vector3 pos = ClickPos();
 
             if ((connectOutput)&&(pos!= Vector3.zero))
             {
-                pos.y += 0.015f;
+               // pos.y += 0.015f;
                 currentWire.GetComponent<LineRenderer>().SetVertexCount(pointNum + 1);
                 currentWire.GetComponent<LineRenderer>().SetPosition(pointNum, pos);
                 pointNum++;
@@ -204,9 +206,21 @@ public class Linker : MonoBehaviour
 
     void DrawLabels()
     {
+        if ((showInputs)&&(inputs.Count == 0))
+        {
+            return;
+        }
+        else if ((!showInputs) && (outputs.Count == 0))
+        {
+            return;
+        }
+
         window.SetActive(true);
+
         if (!showInputs)
         {
+            windowHeader.text = "Outputs";
+
             foreach (GameObject item in outputs)
             {
                 item.SetActive(true);
@@ -227,6 +241,8 @@ public class Linker : MonoBehaviour
         }
         else
         {
+            windowHeader.text = "Inputs";
+
             foreach (GameObject item in inputs)
             {
                 item.SetActive(true);
@@ -263,7 +279,7 @@ public class Linker : MonoBehaviour
         GameObject label = Instantiate(IOLabelFab) as GameObject;
         RectTransform tr = label.GetComponent<RectTransform>();
         tr.SetParent(window.transform);
-        tr.localPosition = new Vector3(0,-i * offset - 5,0);
+        tr.localPosition = new Vector3(0,-i * offset - 25,0);
 
         IOLabel lab = label.GetComponent<IOLabel>();
         lab.SetLabel(item.name);
