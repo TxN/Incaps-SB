@@ -21,10 +21,6 @@ public class ArithmeticGate : Gate
 
     public override void Init()
     {
-        if (!miniMode)
-        {
-            txt = GetComponentInChildren<TextMesh>();
-        }
 
         if (!initialized)
         {
@@ -47,6 +43,15 @@ public class ArithmeticGate : Gate
         par.items.Add("Divide");
         par.items.Add("Power");
         par.items.Add("Root");
+
+        if (!miniMode)
+        {
+            txt = GetComponentInChildren<TextMesh>();
+            if (txt != null)
+            {
+                txt.text = ((OpType)Parameters["Operation"].GetValue<int>()).ToString();
+            }
+        }
 
     }
 

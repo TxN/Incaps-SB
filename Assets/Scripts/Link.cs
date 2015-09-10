@@ -122,7 +122,7 @@ public class Link : ScriptableObject
         return true;
     }
 
-    public object GetValue<T>()
+    public object GetValue<T>() 
     {
         if (typeof(T) == typeof(string))
         {

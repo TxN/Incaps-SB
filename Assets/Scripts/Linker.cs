@@ -34,9 +34,6 @@ public class Linker : MonoBehaviour
 
     void Start()
     {
-       // window = new GameObject();
-       // window.GetComponent<Transform>().SetParent(canvas.transform, false);
-       // window.AddComponent<Ima
 
     }
 
@@ -79,8 +76,11 @@ public class Linker : MonoBehaviour
                         currentWire = Instantiate(wireFab) as GameObject;
                         currentWire.transform.position = selectedGate.transform.position;
                         currentWire.transform.parent = selectedGate.transform;
-                        currentWire.GetComponent<LineRenderer>().SetPosition(0, lastClickPos);
-                        currentWire.GetComponent<LineRenderer>().SetPosition(1, lastClickPos);
+                        ChipWire w = currentWire.GetComponent<ChipWire>();
+                        w.ownerChipGUID = selectedGate.guid;
+                        w.AddPoint(lastClickPos);
+                        Debug.Log(inputs[selectedInput].GetComponent<IOLabel>().GetLabel());
+                        w.connectedInput = inputs[selectedInput].GetComponent<IOLabel>().GetLabel();
                         pointNum++;
 
                         inp.wire = currentWire;
@@ -93,9 +93,9 @@ public class Linker : MonoBehaviour
                         output = selectedGate.Outputs[outputs[selectedOutput].GetComponent<IOLabel>().GetLabel()];
                         connectOutput = false;
                         showInputs = true;
-                        currentWire.GetComponent<LineRenderer>().SetVertexCount(pointNum + 1);
-                      //  lastClickPos.y += 0.015f;
-                        currentWire.GetComponent<LineRenderer>().SetPosition(pointNum, lastClickPos);
+
+                        currentWire.GetComponent<ChipWire>().AddPoint(lastClickPos);
+                 
                         LinkInput();
                         pointNum = 0;
                     }
@@ -139,8 +139,7 @@ public class Linker : MonoBehaviour
             if ((connectOutput)&&(pos!= Vector3.zero))
             {
                // pos.y += 0.015f;
-                currentWire.GetComponent<LineRenderer>().SetVertexCount(pointNum + 1);
-                currentWire.GetComponent<LineRenderer>().SetPosition(pointNum, pos);
+                currentWire.GetComponent<ChipWire>().AddPoint(pos);
                 pointNum++;
             }
         }
