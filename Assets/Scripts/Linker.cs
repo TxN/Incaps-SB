@@ -6,20 +6,21 @@ using System.Collections.Generic;
 public class Linker : MonoBehaviour 
 {
     public GateOptions optsWindow;
-
-    public GameObject wireFab;
+        
     public Canvas canvas;
+
+   
+    public GameObject window;
+    public Text windowHeader;
+
+    GameObject IOLabelFab;
+
+    List<GameObject> inputs = new List<GameObject>();
+    List<GameObject> outputs = new List<GameObject>();
 
     Vector3 lastClickPos;
     Gate selectedGate;
 
-    public GameObject window;
-    public Text windowHeader;
-
-    public GameObject IOLabelFab;
-
-    List<GameObject> inputs = new List<GameObject>();
-    List<GameObject> outputs = new List<GameObject>();
     int selectedInput = 0;
     int selectedOutput = 0;
 
@@ -29,93 +30,168 @@ public class Linker : MonoBehaviour
     LinkInput inp;
     Output output;
 
+    private GameObject wireFab;
     GameObject currentWire;
     int pointNum = 0;
 
+    bool enable = true;
+
     void Start()
     {
+        wireFab = Resources.Load("Wire") as GameObject; // Хардкод это плохо
+        IOLabelFab = Resources.Load("IOLabel") as GameObject;
 
+
+    }
+
+    void OnEnable()
+    {
+        GameState.OnStateChanged += StateChanged;
+        GameState.OnCircuitSubstateChanged += SubstateChanged;
+    }
+
+    void OnDisable()
+    {
+        GameState.OnStateChanged -= StateChanged;
+        GameState.OnCircuitSubstateChanged -= SubstateChanged;
+    }
+
+    void StateChanged()
+    {
+        if (GameState.Instance.CurrentGameState == GameState.State.CircuitMode)
+        {
+            enable = true;
+
+            GameState.Instance.SetCircuitEditSubstate(GameState.CircuitEditSubstate.Wiring);
+        }
+    }
+
+    void SubstateChanged()
+    {
+        if (GameState.Instance.CurrentCircuitSubstate != GameState.CircuitEditSubstate.Wiring)
+        {
+            enable = false;
+        }
+        else
+        {
+            enable = true;
+        }
     }
 
     void Update()
     {
         Gate gate = ClickGate();
 
-        if (gate == null)
+        if (enable)
         {
-            window.SetActive(false);
-        }
-        else
-        {
-            if (gate != selectedGate)
-            {
-                selectedGate = gate;
-                ClearLinks();
-                FillLinks();
-            }
-            
-            DrawLabels();
 
-            if (Input.GetAxis("Mouse ScrollWheel") != 0)
+            if (gate == null)
             {
-                ScrollLabels();
+                window.SetActive(false);
             }
+            else
+            {
+                if (gate != selectedGate)
+                {
+                    selectedGate = gate;
+                    ClearLinks();
+                    FillLinks();
+                }
 
+                DrawLabels();
+
+                if (Input.GetAxis("Mouse ScrollWheel") != 0)
+                {
+                    ScrollLabels();
+                }
+
+
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (!connectOutput)
+                    {
+                        if (inputs.Count > 0)
+                        {
+
+                            inp = selectedGate.Inputs[inputs[selectedInput].GetComponent<IOLabel>().GetLabel()];
+                            inp.Disconnect();
+                            connectOutput = true;
+                            showInputs = false;
+                            currentWire = Instantiate(wireFab) as GameObject;
+                            currentWire.transform.position = selectedGate.transform.position;
+                            currentWire.transform.parent = selectedGate.transform;
+                            ChipWire w = currentWire.GetComponent<ChipWire>();
+                            w.ownerChipGUID = selectedGate.guid;
+                            w.AddPoint(lastClickPos);
+                            Debug.Log(inputs[selectedInput].GetComponent<IOLabel>().GetLabel());
+                            w.connectedInput = inputs[selectedInput].GetComponent<IOLabel>().GetLabel();
+                            pointNum++;
+
+                            inp.wire = currentWire;
+                        }
+                    }
+                    else
+                    {
+                        if (outputs.Count > 0)
+                        {
+                            output = selectedGate.Outputs[outputs[selectedOutput].GetComponent<IOLabel>().GetLabel()];
+                            connectOutput = false;
+                            showInputs = true;
+
+                            currentWire.GetComponent<ChipWire>().AddPoint(lastClickPos);
+
+                            LinkInput();
+                            pointNum = 0;
+                        }
+
+                    }
+                }
+
+
+                if (Input.GetKeyDown("r"))
+                {
+                    if (showInputs)
+                    {
+                        if (inputs.Count > 0)
+                        {
+                            LinkInput inpt = selectedGate.Inputs[inputs[selectedInput].GetComponent<IOLabel>().GetLabel()];
+                            inpt.Disconnect();
+                        }
+
+                    }
+                    else
+                    {
+                        connectOutput = false;
+                        showInputs = true;
+                        pointNum = 0;
+                        Destroy(currentWire);
+                        inp = null;
+                    }
+                }
+
+                if (Input.GetMouseButtonDown(1))
+                {
+                    GameState.Instance.SetCircuitEditSubstate(GameState.CircuitEditSubstate.EditOptions);
+                    optsWindow.gameObject.SetActive(true);
+                    optsWindow.LoadParameters(gate);
+                }
+            }
 
             if (Input.GetMouseButtonDown(0))
             {
-                if (!connectOutput)
+                Vector3 pos = ClickPos();
+
+                if ((connectOutput) && (pos != Vector3.zero))
                 {
-                    if (inputs.Count > 0)
-                    {
-
-                        inp = selectedGate.Inputs[inputs[selectedInput].GetComponent<IOLabel>().GetLabel()];
-                        inp.Disconnect();
-                        connectOutput = true;
-                        showInputs = false;
-                        currentWire = Instantiate(wireFab) as GameObject;
-                        currentWire.transform.position = selectedGate.transform.position;
-                        currentWire.transform.parent = selectedGate.transform;
-                        ChipWire w = currentWire.GetComponent<ChipWire>();
-                        w.ownerChipGUID = selectedGate.guid;
-                        w.AddPoint(lastClickPos);
-                        Debug.Log(inputs[selectedInput].GetComponent<IOLabel>().GetLabel());
-                        w.connectedInput = inputs[selectedInput].GetComponent<IOLabel>().GetLabel();
-                        pointNum++;
-
-                        inp.wire = currentWire;
-                    }
-                }
-                else
-                {
-                    if (outputs.Count > 0)
-                    {
-                        output = selectedGate.Outputs[outputs[selectedOutput].GetComponent<IOLabel>().GetLabel()];
-                        connectOutput = false;
-                        showInputs = true;
-
-                        currentWire.GetComponent<ChipWire>().AddPoint(lastClickPos);
-                 
-                        LinkInput();
-                        pointNum = 0;
-                    }
-                    
+                    // pos.y += 0.015f;
+                    currentWire.GetComponent<ChipWire>().AddPoint(pos);
+                    pointNum++;
                 }
             }
 
-
             if (Input.GetKeyDown("r"))
             {
-                if (showInputs)
-                {
-                    if (inputs.Count > 0)
-                    {
-                        LinkInput inpt = selectedGate.Inputs[inputs[selectedInput].GetComponent<IOLabel>().GetLabel()];
-                        inpt.Disconnect();
-                    }
-
-                }
-                else
+                if (connectOutput)
                 {
                     connectOutput = false;
                     showInputs = true;
@@ -125,28 +201,7 @@ public class Linker : MonoBehaviour
                 }
             }
 
-            if (Input.GetMouseButtonDown(1))
-            {
-                optsWindow.gameObject.SetActive(true);
-                optsWindow.LoadParameters(gate);
-            }
         }
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            Vector3 pos = ClickPos();
-
-            if ((connectOutput)&&(pos!= Vector3.zero))
-            {
-               // pos.y += 0.015f;
-                currentWire.GetComponent<ChipWire>().AddPoint(pos);
-                pointNum++;
-            }
-        }
-
-       
-
-
 
     }
 

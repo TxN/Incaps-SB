@@ -176,4 +176,6 @@ public abstract class Gate : LogicObject
         rotation = transform.rotation;
     }
 
+
+
 }

@@ -60,6 +60,8 @@ public class GateOptions : MonoBehaviour
         selectedGate.UpdateParameters();
         linkTool.enabled = true;
         ClearWindow();
+        GameState.Instance.SetCircuitEditSubstate(GameState.CircuitEditSubstate.Wiring);
         gameObject.SetActive(false);
+
     }
 }

@@ -9,6 +9,19 @@ public class CircuitArchiver : MonoBehaviour
     public GameObject bl;
 
 
+    public static void DestroyCircuit(GameObject target, bool destroyGO)
+    {
+        Gate[] gates = target.transform.GetComponentsInChildren<Gate>();
+        foreach (Gate gate in gates)
+        {
+            Destroy(gate);
+            if (destroyGO)
+            {
+                Destroy(gate.gameObject);
+            }
+        }
+    }
+
     public static void PackCircuit(GameObject block,GameObject circuit)
     {
         CircuitData data;
@@ -212,9 +225,9 @@ public class CircuitArchiver : MonoBehaviour
                     gt.Inputs[wire.connectedInput].wire = w;
 
                     int i = 0;
-                    foreach (WirePoints point in data.Wires)
+                    foreach (Vector3 point in wire.Points)
                     {
-                        comp.AddPoint(point.Points[i]);
+                        comp.AddPoint(point);
                         i++;
                     }
 
